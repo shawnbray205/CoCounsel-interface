@@ -233,6 +233,73 @@
             color: #1a202c;
         }
 
+        /* NEW: Opposing Counsel Section Styles */
+        .opposing-counsel-section {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffe4a8 100%);
+            border-left: 5px solid #ff9800;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(255, 152, 0, 0.2);
+        }
+
+        .opposing-counsel-section h4 {
+            color: #e65100;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .opposing-counsel-section h5 {
+            color: #ef6c00;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .opposing-content {
+            color: #5d4037;
+            line-height: 1.8;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .settlement-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border-top: 3px solid #ff9800;
+        }
+
+        .adversarial-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-strong {
+            background: #ffcdd2;
+            color: #c62828;
+        }
+
+        .badge-moderate {
+            background: #fff9c4;
+            color: #f57f17;
+        }
+
+        .badge-weak {
+            background: #c8e6c9;
+            color: #2e7d32;
+        }
+
         .empty-state {
             display: block;
             text-align: center;
@@ -452,13 +519,28 @@
                         </a>
                     </div>
                     <div class="results-content" id="resultsContent"></div>
+
+                    <!-- NEW: Opposing Counsel Section -->
+                    <div class="opposing-counsel-section" id="opposingSection" style="display: none;">
+                        <h4>
+                            🥊 Opposing Counsel Preview
+                            <span class="adversarial-badge" id="adversarialBadge"></span>
+                        </h4>
+                        
+                        <div class="opposing-content" id="opposingContent"></div>
+                        
+                        <div class="settlement-section" id="settlementSection" style="display: none;">
+                            <h5>💼 Settlement Considerations</h5>
+                            <div id="settlementContent"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Configuration - n8n webhook URL for CoCounsel Legal Research Agent
+        // Configuration - UPDATE THIS WITH YOUR n8n WEBHOOK URL
         const WEBHOOK_URL = 'https://sbray205.app.n8n.cloud/webhook/legal-research';
 
         const form = document.getElementById('researchForm');
@@ -470,6 +552,13 @@
         const results = document.getElementById('results');
         const resultsContent = document.getElementById('resultsContent');
         const docLink = document.getElementById('docLink');
+        
+        // NEW: Opposing counsel elements
+        const opposingSection = document.getElementById('opposingSection');
+        const opposingContent = document.getElementById('opposingContent');
+        const settlementSection = document.getElementById('settlementSection');
+        const settlementContent = document.getElementById('settlementContent');
+        const adversarialBadge = document.getElementById('adversarialBadge');
 
         // Example queries click handlers
         document.querySelectorAll('.example-query').forEach(example => {
@@ -488,6 +577,7 @@
             emptyState.style.display = 'none';
             error.classList.remove('active');
             results.classList.remove('active');
+            opposingSection.style.display = 'none'; // Hide opposing counsel section
             loading.classList.add('active');
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Researching...';
@@ -532,6 +622,31 @@
                 if (data.documentUrl) {
                     docLink.href = data.documentUrl;
                     docLink.style.display = 'inline-flex';
+                }
+
+                // NEW: Display opposing counsel preview
+                if (data.opposingCounselPreview) {
+                    opposingSection.style.display = 'block';
+                    opposingContent.innerHTML = formatMemo(data.opposingCounselPreview);
+                    
+                    // Set adversarial strength badge
+                    if (data.adversarialStrength) {
+                        const badgeText = data.adversarialStrength === 'strong_opposition' 
+                            ? 'Strong Opposition' 
+                            : 'Moderate Opposition';
+                        const badgeClass = data.adversarialStrength === 'strong_opposition'
+                            ? 'badge-strong'
+                            : 'badge-moderate';
+                        
+                        adversarialBadge.textContent = badgeText;
+                        adversarialBadge.className = 'adversarial-badge ' + badgeClass;
+                    }
+                }
+
+                // NEW: Display settlement leverage
+                if (data.settlementLeverage) {
+                    settlementSection.style.display = 'block';
+                    settlementContent.innerHTML = formatMemo(data.settlementLeverage);
                 }
 
             } catch (err) {
